@@ -2,4 +2,12 @@
 <ExtensionModel>
 	<Runtime>
 	</Runtime>
+	<Extension path="/MonoDevelop/Ide/Commands/Edit">
+		<Command id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec"
+				 _label="Make Nuspec"
+				 defaultHandler="NuGetPackageMakerAddin.MakeNuspecHandler" />
+	</Extension>
+	<Extension path="/MonoDevelop/Ide/MainMenu/Edit">
+		<CommandItem id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec" />
+	</Extension>
 </ExtensionModel>
