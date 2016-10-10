@@ -36,10 +36,9 @@ namespace NuGetPackageMakerAddin
 
             var nuspecPath = Path.Combine(toolsPath, $"{solution.Name}.nuspec");
 
-            if (!File.Exists(nuspecPath))
-            {
-                await NuGetOperationHelper.CreateNuspec(nuspecPath);
-            }
+            if (File.Exists(nuspecPath)) return;
+
+            await NuGetOperationHelper.CreateNuspec(nuspecPath);
 
             var folder = solution.RootFolder.Items
                 .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
