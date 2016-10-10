@@ -1,13 +1,17 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <ExtensionModel>
-	<Runtime>
-	</Runtime>
-	<Extension path="/MonoDevelop/Ide/Commands/Edit">
-		<Command id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec"
-				 _label="Make Nuspec"
-				 defaultHandler="NuGetPackageMakerAddin.MakeNuspecHandler" />
-	</Extension>
-	<Extension path="/MonoDevelop/Ide/MainMenu/Edit">
-		<CommandItem id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec" />
-	</Extension>
+    <Runtime>
+    </Runtime>
+    <Extension path="/MonoDevelop/Ide/Commands/Edit">
+        <Command id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec"
+                 _label="Make Nuspec"
+                 defaultHandler="NuGetPackageMakerAddin.MakeNuspecHandler"/>
+        <Command id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNupack"
+                 _label="Make Package"
+                 defaultHandler="NuGetPackageMakerAddin.MakeNupackHandler"/>
+    </Extension>
+    <Extension path="/MonoDevelop/Ide/MainMenu/Edit">
+        <CommandItem id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec"/>
+        <CommandItem id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNupack"/>
+    </Extension>
 </ExtensionModel>

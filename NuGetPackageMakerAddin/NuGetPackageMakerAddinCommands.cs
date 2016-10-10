@@ -3,6 +3,6 @@
     public enum NuGetPackageMakerAddinCommands
     {
         MakeNuspec,
-        MakePackages,
+        MakeNupack,
     }
 }
