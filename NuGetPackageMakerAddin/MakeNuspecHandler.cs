@@ -31,7 +31,7 @@ namespace NuGetPackageMakerAddin
             if (solution.RootFolder.Items.All(x => x.Name != "tools"))
             {
                 //追加
-                await AddToolsFolder(toolsPath);
+                AddToolsFolder(toolsPath);
             }
 
             var nuspecPath = Path.Combine(toolsPath, $"{solution.Name}.nuspec");
@@ -44,10 +44,10 @@ namespace NuGetPackageMakerAddin
             var folder = solution.RootFolder.Items
                 .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
 
-            IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new string[]{nuspecPath});
+            IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new string[] {nuspecPath});
         }
 
-        private Task AddToolsFolder(string path)
+        private void AddToolsFolder(string path)
         {
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
