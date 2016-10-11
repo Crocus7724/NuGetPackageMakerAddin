@@ -1,8 +1,6 @@
-﻿using System;
-using MonoDevelop.Core;
+﻿using MonoDevelop.Core;
 using MonoDevelop.Core.Execution;
 using MonoDevelop.Ide;
-using MonoDevelop.Ide.TypeSystem;
 
 namespace NuGetPackageMakerAddin
 {
@@ -18,10 +16,11 @@ namespace NuGetPackageMakerAddin
             (_nuspecMonitor != null && !_nuspecMonitor.disposed)
                 ? _nuspecMonitor
                 : (_nuspecMonitor = new ProgressMonitorService("Make Nuspec"));
+
             //IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor("Make Nuspec", IconId.Null, true, true, true);
 
         public static ProgressMonitor GetNupackMonitor =>
-            (_nupackMonitor != null && !_nuspecMonitor.disposed)
+            (_nupackMonitor != null && !_nupackMonitor.disposed)
                 ? _nupackMonitor
                 : (_nupackMonitor = new ProgressMonitorService("Make Package"));
             //IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor("Make Nupack", IconId.Null, true, true, true);

@@ -14,7 +14,7 @@ namespace NuGetPackageMakerAddin
 {
     public class NuGetOperationHelper
     {
-        public static Task CreateNuspec(string path, ProgressMonitor monitor)
+        public static Task CreateNuspec(string path)
             => Task.Run((() =>
             {
                 var nuspec = new XElement("package",
@@ -34,7 +34,6 @@ namespace NuGetPackageMakerAddin
                     new XElement("files", GetFiles()));
 
                 nuspec.Save(path);
-                monitor.Log.WriteLine($"{path}を作成しました。");
             }));
 
 
@@ -45,12 +44,12 @@ namespace NuGetPackageMakerAddin
                 foreach (var replace in nuspec.Elements()
                     .Where(x => x.Name == "metadata" || x.Name == "files").Elements())
                 {
-                    ReplaceMacro(replace, monitor);
+                    ReplaceMacro(replace);
                 }
 
                 foreach (var replace in nuspec.Element("files").Elements().Attributes())
                 {
-                    ReplaceMacro(replace, monitor);
+                    ReplaceMacro(replace);
                 }
 
                 if (path.ParentDirectory.FileName == "tools")
@@ -87,11 +86,14 @@ namespace NuGetPackageMakerAddin
                 .Select(x => new XElement("file",
                     new XAttribute("src", Path.Combine("..", x.Name, "bin", "$configuration$", $"{x.Name}.dll"))));
 
-        private static void ReplaceMacro(XElement input, ProgressMonitor monitor)
+        private static void ReplaceMacro(XElement input) => input.Value = ConvertMacro(input.Value);
+
+        private static void ReplaceMacro(XAttribute input) => input.Value = ConvertMacro(input.Value);
+
+        private static string ConvertMacro(string input)
         {
-            var replace = input.Value;
-            var match = Regex.Match(replace, @"\$.*?\$");
-            if (!match.Success) return;
+            var match = Regex.Match(input, @"\$.*?\$");
+            if (!match.Success) return input;
 
             var solution = ProjectService.CurrentSolution;
             while (match.Success)
@@ -100,76 +102,38 @@ namespace NuGetPackageMakerAddin
                 {
                     case NugetConst.DefaultId:
                     case NugetConst.DefaultTitle:
-                        input.Value = replace.Replace(match.Value, solution.Name);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.Name}");
+                        ProgressMonitorService.GetNupackMonitor.Log.WriteLine($"{match.Value} -> {solution.Name}");
+                        input = input.Replace(match.Value, solution.Name);
                         break;
                     case NugetConst.DefaultVersion:
-                        input.Value = replace.Replace(match.Value, solution.Version);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.Version}");
+                        ProgressMonitorService.GetNupackMonitor.Log.WriteLine($"{match.Value} -> {solution.Version}");
+                        input = input.Replace(match.Value, solution.Version);
                         break;
                     case NugetConst.DefaultAuthors:
-                        input.Value = replace.Replace(match.Value, solution.AuthorInformation.Name);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.AuthorInformation.Name}");
+                        ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
+                            $"{match.Value} -> {solution.AuthorInformation.Name}");
+                        input = input.Replace(match.Value, solution.AuthorInformation.Name);
                         break;
                     case NugetConst.DefaultDescription:
-                        input.Value = replace.Replace(match.Value, solution.Description);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.Description}");
+                        ProgressMonitorService.GetNupackMonitor.Log.WriteLine($"{match.Value} -> {solution.Description}");
+                        input = input.Replace(match.Value, solution.Description);
                         break;
                     case NugetConst.DefaultCopyright:
-                        input.Value = replace.Replace(match.Value, solution.AuthorInformation.Copyright);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.AuthorInformation.Copyright}");
+                        ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
+                            $"{match.Value} -> {solution.AuthorInformation.Copyright}");
+                        input = input.Replace(match.Value, solution.AuthorInformation.Copyright);
                         break;
                     case "$configuration$":
-                        input.Value = replace.Replace(match.Value, IdeApp.Workspace.ActiveConfigurationId);
-                        monitor.Log.WriteLine($"{match.Value} -> {IdeApp.Workspace.ActiveConfigurationId}");
+                        ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
+                            $"{match.Value} -> {IdeApp.Workspace.ActiveConfigurationId}");
+                        input = input.Replace(match.Value, IdeApp.Workspace.ActiveConfigurationId);
                         break;
                 }
 
                 match = match.NextMatch();
             }
-        }
 
-        //中身同じなのに抽象化できない・・・
-        private static void ReplaceMacro(XAttribute input, ProgressMonitor monitor)
-        {
-            var replace = input.Value;
-            var match = Regex.Match(replace, @"\$.*?\$");
-            if (!match.Success) return;
-
-            var solution = ProjectService.CurrentSolution;
-            while (match.Success)
-            {
-                switch (match.Value)
-                {
-                    case NugetConst.DefaultId:
-                    case NugetConst.DefaultTitle:
-                        input.Value = replace.Replace(match.Value, solution.Name);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.Name}");
-                        break;
-                    case NugetConst.DefaultVersion:
-                        input.Value = replace.Replace(match.Value, solution.Version);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.Version}");
-                        break;
-                    case NugetConst.DefaultAuthors:
-                        input.Value = replace.Replace(match.Value, solution.AuthorInformation.Name);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.AuthorInformation.Name}");
-                        break;
-                    case NugetConst.DefaultDescription:
-                        input.Value = replace.Replace(match.Value, solution.Description);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.Description}");
-                        break;
-                    case NugetConst.DefaultCopyright:
-                        input.Value = replace.Replace(match.Value, solution.AuthorInformation.Copyright);
-                        monitor.Log.WriteLine($"{match.Value} -> {solution.AuthorInformation.Copyright}");
-                        break;
-                    case "$configuration$":
-                        input.Value = replace.Replace(match.Value, IdeApp.Workspace.ActiveConfigurationId);
-                        monitor.Log.WriteLine($"{match.Value} -> {IdeApp.Workspace.ActiveConfigurationId}");
-                        break;
-                }
-
-                match = match.NextMatch();
-            }
+            return input;
         }
     }
 }

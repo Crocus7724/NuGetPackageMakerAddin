@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MonoDevelop.Components.Commands;
+using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.Projects;
 
@@ -30,24 +32,12 @@ namespace NuGetPackageMakerAddin
                 {
                     var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
                     var toolsPath = Path.Combine(solution.BaseDirectory, "tools");
-                    //ソリューションフォルダにtoolsがなかったら
-                    if (solution.RootFolder.Items.All(x => x.Name != "tools"))
-                    {
-                        //追加
-                        AddToolsFolder(toolsPath);
-                        monitor.Log.WriteLine($"{toolsPath}を作成しました");
-                    }
+
+                    AddToolsFolderIfNotFound(toolsPath, monitor);
 
                     var nuspecPath = Path.Combine(toolsPath, $"{solution.Name}.nuspec");
 
-                    if (File.Exists(nuspecPath)) return;
-
-                    await NuGetOperationHelper.CreateNuspec(nuspecPath, monitor);
-
-                    var folder = solution.RootFolder.Items
-                        .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
-
-                    IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new[] {nuspecPath});
+                    await AddNuspecFileIfNotFound(nuspecPath, monitor);
                 }
                 catch (Exception e)
                 {
@@ -56,16 +46,46 @@ namespace NuGetPackageMakerAddin
             }
         }
 
-        private void AddToolsFolder(string path)
+        private async Task AddToolsFolderIfNotFound(string path, ProgressMonitor monitor)
         {
             if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
-            ProjectService.CurrentSolution.RootFolder.AddItem(new SolutionFolder()
             {
-                BaseDirectory = path,
-                Name = "tools"
-            });
+                Directory.CreateDirectory(path);
+                monitor.Log.WriteLine($"{path}を作成しました。");
+            }
+
+            if (IdeApp.ProjectOperations.CurrentSelectedSolution.RootFolder.Items.All(x => x.Name != "tools"))
+            {
+                ProjectService.CurrentSolution.RootFolder.AddItem(new SolutionFolder()
+                {
+                    BaseDirectory = path,
+                    Name = "tools"
+                });
+                await ProjectService.CurrentSolution.SaveAsync(monitor);
+
+                ProgressMonitorService.GetNuspecMonitor.Log.WriteLine($"{path}をソリューションに追加しました。");
+            }
+        }
+
+        private async Task AddNuspecFileIfNotFound(string path, ProgressMonitor monitor)
+        {
+            if (!File.Exists(path))
+            {
+                await NuGetOperationHelper.CreateNuspec(path);
+                monitor.Log.WriteLine($"{path}を作成しました。");
+            }
+
+            var solution = ProjectService.CurrentSolution;
+            var folder = solution.RootFolder.Items
+                .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
+            if (folder.Items.All(x => x.Name != $"{solution.Name}.nuspec"))
+            {
+                IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new[] {path});
+
+                await ProjectService.CurrentSolution.SaveAsync(monitor);
+
+                monitor.Log.WriteLine($"{path}をソリューションに追加しました。");
+            }
         }
     }
 }
