@@ -1,7 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.Ide;
 using MonoDevelop.Projects;
@@ -25,25 +24,36 @@ namespace NuGetPackageMakerAddin
 
         protected override async void Run()
         {
-            var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
-            var toolsPath = Path.Combine(solution.BaseDirectory, "tools");
-            //ソリューションフォルダにtoolsがなかったら
-            if (solution.RootFolder.Items.All(x => x.Name != "tools"))
+            using (var monitor = ProgressMonitorService.GetNuspecMonitor)
             {
-                //追加
-                AddToolsFolder(toolsPath);
+                try
+                {
+                    var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
+                    var toolsPath = Path.Combine(solution.BaseDirectory, "tools");
+                    //ソリューションフォルダにtoolsがなかったら
+                    if (solution.RootFolder.Items.All(x => x.Name != "tools"))
+                    {
+                        //追加
+                        AddToolsFolder(toolsPath);
+                        monitor.Log.WriteLine($"{toolsPath}を作成しました");
+                    }
+
+                    var nuspecPath = Path.Combine(toolsPath, $"{solution.Name}.nuspec");
+
+                    if (File.Exists(nuspecPath)) return;
+
+                    await NuGetOperationHelper.CreateNuspec(nuspecPath, monitor);
+
+                    var folder = solution.RootFolder.Items
+                        .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
+
+                    IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new[] {nuspecPath});
+                }
+                catch (Exception e)
+                {
+                    monitor.ErrorLog.WriteLine($"{e.Message}\n{e.StackTrace}");
+                }
             }
-
-            var nuspecPath = Path.Combine(toolsPath, $"{solution.Name}.nuspec");
-
-            if (File.Exists(nuspecPath)) return;
-
-            await NuGetOperationHelper.CreateNuspec(nuspecPath);
-
-            var folder = solution.RootFolder.Items
-                .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
-
-            IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new string[] {nuspecPath});
         }
 
         private void AddToolsFolder(string path)
