@@ -2,7 +2,7 @@
 
 namespace NuGetPackageMakerAddin
 {
-    public class NugetConst
+    internal class NuGetConst
     {
         public const string DefaultId = "$id$";
         public const string DefaultTitle = "$title$";
@@ -16,5 +16,9 @@ namespace NuGetPackageMakerAddin
         public const string DefaultReleaseNotes = "Summary of changes made in this release of the package.";
         public const string DefaultCopyright = "$copyright$";
         public const string DefaultTags = "Tag1 Tag2";
+
+
+        public const string OutputPathKey = "NuGetPackageMakerAddinOutputPathKey";
+        public const string CheckCustomPathKey = "NuGetPackageMakerAddinDefaultUsingKey";
     }
 }

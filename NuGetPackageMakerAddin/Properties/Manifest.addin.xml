@@ -2,6 +2,11 @@
 <ExtensionModel>
     <Runtime>
     </Runtime>
+    <Extension path="/MonoDevelop/Ide/GlobalOptionsDialog/Other">
+        <Section id="NuGetPackageMakerSetting" _label="NuGet Package Maker Setting"
+                 class="NuGetPackageMakerAddin.NuGetPackageMakerSettingPanel" icon="md-prefs-source"/>
+    </Extension>
+
     <Extension path="/MonoDevelop/Ide/Commands/Edit">
         <Command id="NuGetPackageMakerAddin.NuGetPackageMakerAddinCommands.MakeNuspec"
                  _label="Make Nuspec"

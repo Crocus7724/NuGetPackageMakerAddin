@@ -3,7 +3,7 @@ using MonoDevelop.Projects;
 
 namespace NuGetPackageMakerAddin
 {
-    public class ProjectService
+    internal class ProjectService
     {
         public static Project CurrentProject
             => IdeApp.ProjectOperations.CurrentSelectedProject;

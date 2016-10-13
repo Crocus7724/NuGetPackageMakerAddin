@@ -12,24 +12,24 @@ using NuGetPackageMakerAddin.Extensions;
 
 namespace NuGetPackageMakerAddin
 {
-    public class NuGetOperationHelper
+    internal class NuGetOperationHelper
     {
         public static Task CreateNuspec(string path)
             => Task.Run((() =>
             {
                 var nuspec = new XElement("package",
                     new XElement("metadata",
-                        new XElement("id", NugetConst.DefaultId),
-                        new XElement("version", NugetConst.DefaultVersion),
-                        new XElement("authors", NugetConst.DefaultAuthors),
-                        new XElement("licenseUrl", NugetConst.DefaultLicenseUrl),
-                        new XElement("projectUrl", NugetConst.DefaultProjectUrl),
-                        new XElement("iconUrl", NugetConst.DefaultIconUrl),
-                        new XElement("requireLicenseAcceptance", NugetConst.DefaultRequireLicenseAcceptance),
-                        new XElement("description", NugetConst.DefaultDescription),
-                        new XElement("releaseNotes", NugetConst.DefaultReleaseNotes),
-                        new XElement("copyright", NugetConst.DefaultCopyright),
-                        new XElement("tags", NugetConst.DefaultTags),
+                        new XElement("id", NuGetConst.DefaultId),
+                        new XElement("version", NuGetConst.DefaultVersion),
+                        new XElement("authors", NuGetConst.DefaultAuthors),
+                        new XElement("licenseUrl", NuGetConst.DefaultLicenseUrl),
+                        new XElement("projectUrl", NuGetConst.DefaultProjectUrl),
+                        new XElement("iconUrl", NuGetConst.DefaultIconUrl),
+                        new XElement("requireLicenseAcceptance", NuGetConst.DefaultRequireLicenseAcceptance),
+                        new XElement("description", NuGetConst.DefaultDescription),
+                        new XElement("releaseNotes", NuGetConst.DefaultReleaseNotes),
+                        new XElement("copyright", NuGetConst.DefaultCopyright),
+                        new XElement("tags", NuGetConst.DefaultTags),
                         new XElement("dependencies", GetDependencies())),
                     new XElement("files", GetFiles()));
 
@@ -41,13 +41,12 @@ namespace NuGetPackageMakerAddin
             => Task.Run(() =>
             {
                 var nuspec = XElement.Load(path);
-                foreach (var replace in nuspec.Elements()
-                    .Where(x => x.Name == "metadata" || x.Name == "files").Elements())
+                foreach (var replace in nuspec.XPathSelectElements("metadata").Elements())
                 {
                     ReplaceMacro(replace);
                 }
 
-                foreach (var replace in nuspec.Element("files").Elements().Attributes())
+                foreach (var replace in nuspec.XPathSelectElements("//*/file").Attributes())
                 {
                     ReplaceMacro(replace);
                 }
@@ -60,15 +59,17 @@ namespace NuGetPackageMakerAddin
                     }
 
                     var nuspecPath = Path.Combine(path.ParentDirectory.ParentDirectory,
-                        $"{ProjectService.CurrentSolution.Name}.nuspec");
+                        $"{path.FileNameWithoutExtension}-backup.nuspec");
                     nuspec.Save(nuspecPath);
-                    ProcessService.RunNupack(path.ParentDirectory.ParentDirectory, monitor);
+                    ProcessService.RunNupack(nuspecPath, monitor);
                     File.Delete(nuspecPath);
                 }
                 else
                 {
-                    nuspec.Save(path.ParentDirectory);
-                    ProcessService.RunNupack(path, monitor);
+                    var backupPath = Path.Combine(path.ParentDirectory, $"{path.FileNameWithoutExtension}-backup.nuspec");
+                    nuspec.Save(backupPath);
+                    ProcessService.RunNupack(backupPath, monitor);
+                    File.Delete(backupPath);
                 }
             });
 
@@ -76,7 +77,7 @@ namespace NuGetPackageMakerAddin
             => ProjectService.CurrentSolution.GetAllProjects()
                 .Where(x => File.Exists(Path.Combine(x.BaseDirectory, "packages.config")))
                 .SelectMany(x => XElement.Load(Path.Combine(x.BaseDirectory, "packages.config")).Elements("package"))
-                .Distinct(x => x.Attribute("id"))
+                .Distinct(x => x.Attribute("id")?.Value)
                 .Select(x => new XElement("dependency",
                     new XAttribute("id", x.Attribute("id").Value),
                     new XAttribute("version", x.Attribute("version").Value)));
@@ -84,7 +85,12 @@ namespace NuGetPackageMakerAddin
         private static IEnumerable<XElement> GetFiles()
             => ProjectService.CurrentSolution.GetAllProjects()
                 .Select(x => new XElement("file",
-                    new XAttribute("src", Path.Combine("..", x.Name, "bin", "$configuration$", $"{x.Name}.dll"))));
+                    new XAttribute("src",
+                        Path.Combine("..",
+                            x.GetOutputFileName(IdeApp.Workspace.ActiveConfiguration)
+                                .ToRelative(ProjectService.CurrentSolution.BaseDirectory)).Replace(
+                            IdeApp.Workspace.ActiveConfigurationId, "$Configuration$")),
+                    new XAttribute("target", "lib/")));
 
         private static void ReplaceMacro(XElement input) => input.Value = ConvertMacro(input.Value);
 
@@ -100,30 +106,30 @@ namespace NuGetPackageMakerAddin
             {
                 switch (match.Value)
                 {
-                    case NugetConst.DefaultId:
-                    case NugetConst.DefaultTitle:
+                    case NuGetConst.DefaultId:
+                    case NuGetConst.DefaultTitle:
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine($"{match.Value} -> {solution.Name}");
                         input = input.Replace(match.Value, solution.Name);
                         break;
-                    case NugetConst.DefaultVersion:
+                    case NuGetConst.DefaultVersion:
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine($"{match.Value} -> {solution.Version}");
                         input = input.Replace(match.Value, solution.Version);
                         break;
-                    case NugetConst.DefaultAuthors:
+                    case NuGetConst.DefaultAuthors:
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
                             $"{match.Value} -> {solution.AuthorInformation.Name}");
                         input = input.Replace(match.Value, solution.AuthorInformation.Name);
                         break;
-                    case NugetConst.DefaultDescription:
+                    case NuGetConst.DefaultDescription:
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine($"{match.Value} -> {solution.Description}");
                         input = input.Replace(match.Value, solution.Description);
                         break;
-                    case NugetConst.DefaultCopyright:
+                    case NuGetConst.DefaultCopyright:
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
                             $"{match.Value} -> {solution.AuthorInformation.Copyright}");
                         input = input.Replace(match.Value, solution.AuthorInformation.Copyright);
                         break;
-                    case "$configuration$":
+                    case "$Configuration$":
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
                             $"{match.Value} -> {IdeApp.Workspace.ActiveConfigurationId}");
                         input = input.Replace(match.Value, IdeApp.Workspace.ActiveConfigurationId);

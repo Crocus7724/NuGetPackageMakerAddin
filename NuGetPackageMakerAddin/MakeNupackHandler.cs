@@ -22,7 +22,6 @@ namespace NuGetPackageMakerAddin
 
                     foreach (var nuspecPath in nuspecFiles)
                     {
-
                         monitor.Log.WriteLine($"{nuspecPath}で実行中...");
                         await NuGetOperationHelper.CreateNupack(nuspecPath, monitor);
                     }

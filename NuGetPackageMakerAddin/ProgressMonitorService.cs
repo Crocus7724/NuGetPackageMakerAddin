@@ -4,7 +4,7 @@ using MonoDevelop.Ide;
 
 namespace NuGetPackageMakerAddin
 {
-    public class ProgressMonitorService:OutputProgressMonitor
+    internal class ProgressMonitorService:OutputProgressMonitor
     {
         private static ProgressMonitorService _nuspecMonitor;
         private static ProgressMonitorService _nupackMonitor;
@@ -17,13 +17,10 @@ namespace NuGetPackageMakerAddin
                 ? _nuspecMonitor
                 : (_nuspecMonitor = new ProgressMonitorService("Make Nuspec"));
 
-            //IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor("Make Nuspec", IconId.Null, true, true, true);
-
         public static ProgressMonitor GetNupackMonitor =>
             (_nupackMonitor != null && !_nupackMonitor.disposed)
                 ? _nupackMonitor
                 : (_nupackMonitor = new ProgressMonitorService("Make Package"));
-            //IdeApp.Workbench.ProgressMonitors.GetOutputProgressMonitor("Make Nupack", IconId.Null, true, true, true);
 
         private ProgressMonitorService(string title)
         {

@@ -4,16 +4,19 @@ using MonoDevelop.Core;
 
 namespace NuGetPackageMakerAddin
 {
-    public class ProcessService
+    internal class ProcessService
     {
-        public static void RunNupack(string path, ProgressMonitor monitor)
+        public static void RunNupack(FilePath path, ProgressMonitor monitor)
         {
             using (var process = new Process())
             {
+                var outputDirectory = PropertyService.Get<bool>(NuGetConst.CheckCustomPathKey)
+                    ? $"-OutputDirectory {PropertyService.Get<string>(NuGetConst.OutputPathKey)}"
+                    : string.Empty;
                 process.StartInfo = new ProcessStartInfo("nuget",
-                    $"pack {ProjectService.CurrentSolution.Name}.nuspec -Verbosity detail")
+                    $"pack {path} -Verbosity detail {outputDirectory}")
                 {
-                    WorkingDirectory = path,
+                    WorkingDirectory = path.ParentDirectory,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
