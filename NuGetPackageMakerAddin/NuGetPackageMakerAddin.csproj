@@ -33,6 +33,7 @@
     <Compile Include="NuGetOperationHelper.cs" />
     <Compile Include="NuGetPackageMakerAddinCommands.cs" />
     <Compile Include="NuGetPackageMakerSettingPanel.cs" />
+    <Compile Include="NuGetPackageMakerSettings.cs" />
     <Compile Include="ProcessService.cs" />
     <Compile Include="ProgressMonitorService.cs" />
     <Compile Include="ProjectService.cs" />

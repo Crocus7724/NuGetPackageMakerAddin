@@ -10,8 +10,8 @@ namespace NuGetPackageMakerAddin
         {
             using (var process = new Process())
             {
-                var outputDirectory = PropertyService.Get<bool>(NuGetConst.CheckCustomPathKey)
-                    ? $"-OutputDirectory {PropertyService.Get<string>(NuGetConst.OutputPathKey)}"
+                var outputDirectory = NuGetPackageMakerSettings.Current.UsingCustomPath
+                    ? $"-OutputDirectory {NuGetPackageMakerSettings.Current.CustomPath}"
                     : string.Empty;
                 process.StartInfo = new ProcessStartInfo("nuget",
                     $"pack {path} -Verbosity detail {outputDirectory}")

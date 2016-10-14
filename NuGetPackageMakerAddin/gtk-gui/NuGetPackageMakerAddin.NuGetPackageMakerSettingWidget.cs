@@ -20,6 +20,18 @@ namespace NuGetPackageMakerAddin
 
 		private global::Gtk.Button browsButton;
 
+		private global::Gtk.CheckButton checkUseReleaseBuildButton;
+
+		private global::Gtk.CheckButton checkBeforeBuildButton;
+
+		private global::Gtk.CheckButton autoPublishButton;
+
+		private global::Gtk.HBox hbox1;
+
+		private global::Gtk.Label label1;
+
+		private global::Gtk.Entry publishEntry;
+
 		protected virtual void Build()
 		{
 			global::Stetic.Gui.Initialize(this);
@@ -105,6 +117,69 @@ namespace NuGetPackageMakerAddin
 			w7.Position = 3;
 			w7.Expand = false;
 			w7.Fill = false;
+			// Container child vbox5.Gtk.Box+BoxChild
+			this.checkUseReleaseBuildButton = new global::Gtk.CheckButton();
+			this.checkUseReleaseBuildButton.CanFocus = true;
+			this.checkUseReleaseBuildButton.Name = "checkUseReleaseBuildButton";
+			this.checkUseReleaseBuildButton.Label = global::Mono.Unix.Catalog.GetString("Use Release Build");
+			this.checkUseReleaseBuildButton.DrawIndicator = true;
+			this.checkUseReleaseBuildButton.UseUnderline = true;
+			this.vbox5.Add(this.checkUseReleaseBuildButton);
+			global::Gtk.Box.BoxChild w8 = ((global::Gtk.Box.BoxChild)(this.vbox5[this.checkUseReleaseBuildButton]));
+			w8.Position = 4;
+			w8.Expand = false;
+			w8.Fill = false;
+			// Container child vbox5.Gtk.Box+BoxChild
+			this.checkBeforeBuildButton = new global::Gtk.CheckButton();
+			this.checkBeforeBuildButton.CanFocus = true;
+			this.checkBeforeBuildButton.Name = "checkBeforeBuildButton";
+			this.checkBeforeBuildButton.Label = global::Mono.Unix.Catalog.GetString("Auto Build(Build before run package command)");
+			this.checkBeforeBuildButton.DrawIndicator = true;
+			this.checkBeforeBuildButton.UseUnderline = true;
+			this.vbox5.Add(this.checkBeforeBuildButton);
+			global::Gtk.Box.BoxChild w9 = ((global::Gtk.Box.BoxChild)(this.vbox5[this.checkBeforeBuildButton]));
+			w9.Position = 5;
+			w9.Expand = false;
+			w9.Fill = false;
+			// Container child vbox5.Gtk.Box+BoxChild
+			this.autoPublishButton = new global::Gtk.CheckButton();
+			this.autoPublishButton.CanFocus = true;
+			this.autoPublishButton.Name = "autoPublishButton";
+			this.autoPublishButton.Label = global::Mono.Unix.Catalog.GetString("Auto Publish");
+			this.autoPublishButton.DrawIndicator = true;
+			this.autoPublishButton.UseUnderline = true;
+			this.vbox5.Add(this.autoPublishButton);
+			global::Gtk.Box.BoxChild w10 = ((global::Gtk.Box.BoxChild)(this.vbox5[this.autoPublishButton]));
+			w10.Position = 6;
+			w10.Expand = false;
+			w10.Fill = false;
+			// Container child vbox5.Gtk.Box+BoxChild
+			this.hbox1 = new global::Gtk.HBox();
+			this.hbox1.Name = "hbox1";
+			this.hbox1.Spacing = 6;
+			// Container child hbox1.Gtk.Box+BoxChild
+			this.label1 = new global::Gtk.Label();
+			this.label1.Name = "label1";
+			this.label1.LabelProp = global::Mono.Unix.Catalog.GetString("Publish URL");
+			this.hbox1.Add(this.label1);
+			global::Gtk.Box.BoxChild w11 = ((global::Gtk.Box.BoxChild)(this.hbox1[this.label1]));
+			w11.Position = 0;
+			w11.Expand = false;
+			w11.Fill = false;
+			// Container child hbox1.Gtk.Box+BoxChild
+			this.publishEntry = new global::Gtk.Entry();
+			this.publishEntry.CanFocus = true;
+			this.publishEntry.Name = "publishEntry";
+			this.publishEntry.IsEditable = true;
+			this.publishEntry.InvisibleChar = '●';
+			this.hbox1.Add(this.publishEntry);
+			global::Gtk.Box.BoxChild w12 = ((global::Gtk.Box.BoxChild)(this.hbox1[this.publishEntry]));
+			w12.Position = 1;
+			this.vbox5.Add(this.hbox1);
+			global::Gtk.Box.BoxChild w13 = ((global::Gtk.Box.BoxChild)(this.vbox5[this.hbox1]));
+			w13.Position = 7;
+			w13.Expand = false;
+			w13.Fill = false;
 			this.Add(this.vbox5);
 			if ((this.Child != null))
 			{

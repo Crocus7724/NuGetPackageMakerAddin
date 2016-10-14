@@ -16,20 +16,38 @@ namespace NuGetPackageMakerAddin
         {
             _widget = new NuGetPackageMakerSettingWidget();
 
+            var settings = NuGetPackageMakerSettings.Current;
+
             _widget.BrowsButton.Clicked += OnClicked;
-            var path = PropertyService.Get<string>(NuGetConst.OutputPathKey) ?? string.Empty;
+            var path = settings.CustomPath ?? string.Empty;
 
             _widget.OutputPathEntry.Text = path;
 
-            var isCustom = PropertyService.Get<bool>(NuGetConst.CheckCustomPathKey);
+            var isCustom = settings.UsingCustomPath;
             _widget.CheckCustomPath.Active = isCustom;
-            OnStateChanged(null,null);
-            _widget.CheckCustomPath.Toggled += OnStateChanged;
+            OnCheckCustomPathChanged(null, null);
+            _widget.CheckCustomPath.Toggled += OnCheckCustomPathChanged;
+
+            _widget.CheckBeforeBuildButton.Active = settings.BeforeBuild;
+            _widget.CheckUseReleaseBuildButton.Active = settings.UseReleaseBuild;
+
+            _widget.AutoPublishButton.Active = settings.AutoPublish;
+            _widget.AutoPublishButton.Toggled += OnAutoPublishChanged;
+            OnAutoPublishChanged(null, null);
+            _widget.PublishEntry.Text = settings.PublishUrl ?? string.Empty;
+
+            _widget.Show();
 
             return _widget;
         }
 
-        private void OnStateChanged(object o, EventArgs eventArgs)
+        private void OnAutoPublishChanged(object sender, EventArgs eventArgs)
+        {
+            _widget.PublishEntry.Sensitive = _widget.AutoPublishButton.Active;
+        }
+
+
+        private void OnCheckCustomPathChanged(object o, EventArgs eventArgs)
         {
             if (_widget.CheckCustomPath.Active)
             {
@@ -54,15 +72,20 @@ namespace NuGetPackageMakerAddin
 
         public override void ApplyChanges()
         {
-            PropertyService.Set(NuGetConst.CheckCustomPathKey, _widget.CheckCustomPath.Active);
-            PropertyService.Set(NuGetConst.OutputPathKey, _widget.OutputPathEntry.Text);
+            var settings = NuGetPackageMakerSettings.Current;
+            settings.CustomPath = _widget.OutputPathEntry.Text;
+            settings.UsingCustomPath = _widget.CheckCustomPath.Active;
+            settings.BeforeBuild = _widget.CheckBeforeBuildButton.Active;
+            settings.UseReleaseBuild = _widget.CheckUseReleaseBuildButton.Active;
+            settings.AutoPublish = _widget.AutoPublishButton.Active;
+            settings.PublishUrl = _widget.PublishEntry.Text;
         }
 
         public override void Dispose()
         {
             _widget.BrowsButton.Clicked -= OnClicked;
-            _widget.CheckCustomPath.Toggled -= OnStateChanged;
-
+            _widget.CheckCustomPath.Toggled -= OnCheckCustomPathChanged;
+            _widget.AutoPublishButton.Toggled -= OnAutoPublishChanged;
             base.Dispose();
         }
     }

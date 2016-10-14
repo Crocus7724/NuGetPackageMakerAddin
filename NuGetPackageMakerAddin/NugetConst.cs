@@ -20,5 +20,9 @@ namespace NuGetPackageMakerAddin
 
         public const string OutputPathKey = "NuGetPackageMakerAddinOutputPathKey";
         public const string CheckCustomPathKey = "NuGetPackageMakerAddinDefaultUsingKey";
+        public const string BeforeBuildKey = "NuGetPackageMakerAddinFeforeBuildKey";
+        public const string CheckUseAutoPublishKey = "NuGetPackageMakerAddinCheckUseAutoPublishKey";
+        public const string UseReleaseBuildKey = "NuGetPackageMakerAddinUseReleaseBuildKey";
+        public const string PublishUrlKey = "NuGetPackageMakerAddinPublishUrlKey";
     }
 }
