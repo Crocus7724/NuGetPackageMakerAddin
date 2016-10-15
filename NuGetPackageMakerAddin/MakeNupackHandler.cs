@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.Ide;
 
@@ -8,9 +9,7 @@ namespace NuGetPackageMakerAddin
     public class MakeNupackHandler : CommandHandler
     {
         protected override void Update(CommandInfo info)
-        {
-            info.Visible = ProjectService.CurrentSolution != null;
-        }
+            => info.Visible = ProjectService.CurrentSolution != null;
 
         protected override async void Run()
         {
@@ -24,19 +23,25 @@ namespace NuGetPackageMakerAddin
                     var nuspecFiles = Directory.EnumerateFiles(path, "*.nuspec", SearchOption.AllDirectories);
                     if (NuGetPackageMakerSettings.Current.BeforeBuild)
                     {
-                        var reslut=await solution.Build(IdeApp.Workbench.ProgressMonitors.GetBuildProgressMonitor(),
-                            NuGetPackageMakerSettings.Current.UseReleaseBuild
-                                ? solution.Configurations["Release"].Selector
-                                : IdeApp.Workspace.ActiveConfiguration);
+                        using (var buildMonitor = IdeApp.Workbench.ProgressMonitors.GetBuildProgressMonitor())
+                        {
+                            var reslut = await solution.Build(buildMonitor,
+                                NuGetPackageMakerSettings.Current.UseReleaseBuild
+                                    ? solution.Configurations["Release"].Selector
+                                    : IdeApp.Workspace.ActiveConfiguration);
 
-                        if (reslut.Failed)
-                        {
-                            monitor.ErrorLog.WriteLine($"\n\n===ビルドに失敗しました。===\n\n");
-                            return;
-                        }
-                        else
-                        {
-                            monitor.Log.WriteLine("\n\n==ビルドに成功しました。==\n\n");
+                            if (reslut.HasErrors)
+                            {
+                                monitor.ErrorLog.WriteLine($"\n\n===ビルドに失敗しました。===\n\n");
+                                monitor.ErrorLog.WriteLine("===Error===");
+                                monitor.ErrorLog.WriteLine($"{reslut.Errors.Select(x => x.ErrorText).Aggregate((x,y)=>x+"\n"+y)}");
+                                monitor.ErrorLog.WriteLine("===End Error===");
+                                return;
+                            }
+                            else
+                            {
+                                monitor.Log.WriteLine("\n\n==ビルドに成功しました。==\n\n");
+                            }
                         }
                     }
 
@@ -45,7 +50,6 @@ namespace NuGetPackageMakerAddin
                         monitor.Log.WriteLine($"{nuspecPath}で実行中...");
                         await NuGetOperationHelper.CreateNupack(nuspecPath, monitor);
                     }
-
                 }
                 catch (Exception e)
                 {
