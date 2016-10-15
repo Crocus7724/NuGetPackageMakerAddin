@@ -1,8 +1,5 @@
 ﻿using System;
-using System.IO;
-using Gtk;
 using MonoDevelop.Components;
-using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui.Dialogs;
 using FileChooserAction = MonoDevelop.Components.FileChooserAction;
 

@@ -34,5 +34,31 @@ namespace NuGetPackageMakerAddin
                 process.WaitForExit();
             }
         }
+
+        public static async Task RunPush(FilePath path) =>
+            await Task.Run(() =>
+            {
+                using (var process = new Process())
+                {
+                    var monitor = ProgressMonitorService.GetNupackMonitor;
+                    var source = NuGetPackageMakerSettings.Current.PublishUrl;
+                    process.StartInfo = new ProcessStartInfo("nuget", $"push {path} -Source {source}")
+                    {
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                    };
+
+                    process.ErrorDataReceived += (sender, args) => monitor.ErrorLog.WriteLine(args.Data);
+                    process.OutputDataReceived += (sender, args) => monitor.Log.WriteLine(args.Data);
+
+                    process.Start();
+
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
+                    process.WaitForExit();
+                }
+            });
     }
 }

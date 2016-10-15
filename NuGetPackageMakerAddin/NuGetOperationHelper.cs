@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using GLib;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using NuGetPackageMakerAddin.Extensions;
@@ -38,7 +39,7 @@ namespace NuGetPackageMakerAddin
 
 
         public static Task CreateNupack(FilePath path, ProgressMonitor monitor)
-            => Task.Run(() =>
+            => Task.Run(async () =>
             {
                 var nuspec = XElement.Load(path);
                 foreach (var replace in nuspec.XPathSelectElements("metadata").Elements())
@@ -63,6 +64,8 @@ namespace NuGetPackageMakerAddin
                     nuspec.Save(nuspecPath);
                     ProcessService.RunNupack(nuspecPath, monitor);
                     File.Delete(nuspecPath);
+
+                    await PublishIfEnable(nuspecPath);
                 }
                 else
                 {
@@ -70,6 +73,8 @@ namespace NuGetPackageMakerAddin
                     nuspec.Save(backupPath);
                     ProcessService.RunNupack(backupPath, monitor);
                     File.Delete(backupPath);
+
+                    await PublishIfEnable(backupPath);
                 }
             });
 
@@ -130,9 +135,12 @@ namespace NuGetPackageMakerAddin
                         input = input.Replace(match.Value, solution.AuthorInformation.Copyright);
                         break;
                     case "$Configuration$":
+                        var config = NuGetPackageMakerSettings.Current.UseReleaseBuild
+                            ? "Release"
+                            : IdeApp.Workspace.ActiveConfigurationId;
                         ProgressMonitorService.GetNupackMonitor.Log.WriteLine(
-                            $"{match.Value} -> {IdeApp.Workspace.ActiveConfigurationId}");
-                        input = input.Replace(match.Value, IdeApp.Workspace.ActiveConfigurationId);
+                            $"{match.Value} -> {config}");
+                        input = input.Replace(match.Value, config);
                         break;
                 }
 
@@ -140,6 +148,16 @@ namespace NuGetPackageMakerAddin
             }
 
             return input;
+        }
+
+        private static async Task PublishIfEnable(FilePath nuspecPath)
+        {
+            var settings = NuGetPackageMakerSettings.Current;
+            if (!settings.AutoPublish) return;
+
+            string nupkgPath = settings.UsingCustomPath ? settings.CustomPath : nuspecPath.ParentDirectory.ToString();
+
+            await ProcessService.RunPush(nupkgPath);
         }
     }
 }
