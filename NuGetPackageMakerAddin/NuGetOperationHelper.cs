@@ -41,7 +41,9 @@ namespace NuGetPackageMakerAddin
         public static Task CreateNupack(FilePath path, ProgressMonitor monitor)
             => Task.Run(async () =>
             {
+                //.nuspec読み込み
                 var nuspec = XElement.Load(path);
+
                 foreach (var replace in nuspec.XPathSelectElements("metadata").Elements())
                 {
                     ReplaceMacro(replace);
@@ -52,44 +54,55 @@ namespace NuGetPackageMakerAddin
                     ReplaceMacro(replace);
                 }
 
+                //.nuspecファイルの親ディレクトリがtoolsだったら
                 if (path.ParentDirectory.FileName == "tools")
                 {
                     foreach (var replace in nuspec.XPathSelectElements("*/file"))
                     {
+                        //../削除
                         replace.Attribute("src").Value = Regex.Replace(replace.Attribute("src").Value, "\\.\\./", "");
                     }
 
+                    //pathのカレントディレクトリを一段上に
                     path = path.ParentDirectory;
                 }
 
+                //実行用のダミーnuspec作成
                 var nuspecPath = path.ParentDirectory.Combine($"backup.nuspec");
 
                 nuspec.Save(nuspecPath);
                 ProcessService.RunNupack(nuspecPath, monitor);
                 File.Delete(nuspecPath);
 
-                string outputPath = NuGetPackageMakerSettings.Current.UsingCustomPath
-                    ? NuGetPackageMakerSettings.Current.CustomPath
-                    : path.ToString();
-
-                var nupkg = string.Join(".", nuspec.XPathSelectElement("metadata/id").Value,
-                    nuspec.XPathSelectElement("metadata/version").Value, "nupkg");
-
                 if (NuGetPackageMakerSettings.Current.AutoPublish)
                 {
+                    string outputPath = NuGetPackageMakerSettings.Current.UsingCustomPath
+                        ? NuGetPackageMakerSettings.Current.CustomPath
+                        : path.ToString();
+
+                    var nupkg = string.Join(".", nuspec.XPathSelectElement("metadata/id").Value,
+                        nuspec.XPathSelectElement("metadata/version").Value, "nupkg");
+
+
                     await ProcessService.RunPush(Path.Combine(outputPath, nupkg));
                 }
             });
 
+        //現在のソリューションの全てのプロジェクトのpackages.configが存在したら
+        //読み込んでその中のpackage要素のidとversionをdependency要素のid要素とversion要素に変換して
+        //idが重複してたら削除
         private static IEnumerable<XElement> GetDependencies()
             => ProjectService.CurrentSolution.GetAllProjects()
-                .Where(x => File.Exists(Path.Combine(x.BaseDirectory, "packages.config")))
-                .SelectMany(x => XElement.Load(Path.Combine(x.BaseDirectory, "packages.config")).Elements("package"))
-                .Distinct(x => x.Attribute("id")?.Value)
+                .Where(x => File.Exists(x.BaseDirectory.Combine("packages.config")))
+                .SelectMany(x => XElement.Load(x.BaseDirectory.Combine("packages.config")).Elements("package"))
                 .Select(x => new XElement("dependency",
                     new XAttribute("id", x.Attribute("id").Value),
-                    new XAttribute("version", x.Attribute("version").Value)));
+                    new XAttribute("version", x.Attribute("version").Value)))
+                .Distinct(x => x.Attribute("id")?.Value);
 
+        //現在のソリューションの全てのプロジェクトの現在の設定での出力先パスを現在のソリューションがあるディレクトリから見た相対パスで取得して
+        //その中の現在の設定の文字列を$Configuration$に変換したものを..とパスで繋いでそれをfile要素のsrc属性に指定して
+        //target属性にlib/を追加するけど自分で書いてて日本語おかしいと思った
         private static IEnumerable<XElement> GetFiles()
             => ProjectService.CurrentSolution.GetAllProjects()
                 .Select(x => new XElement("file",
@@ -108,6 +121,7 @@ namespace NuGetPackageMakerAddin
 
         private static string ConvertMacro(string input)
         {
+            //正規表現で$$マクロを割り出し
             var match = Regex.Match(input, @"\$.*?\$");
             if (!match.Success) return input;
 

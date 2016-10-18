@@ -4,7 +4,8 @@ using MonoDevelop.Ide;
 
 namespace NuGetPackageMakerAddin
 {
-    internal class ProgressMonitorService:OutputProgressMonitor
+    //なんでこんなめんどいことになっているかというと大体DisposedプロパティがないProgressMonitorが悪い
+    internal class ProgressMonitorService : OutputProgressMonitor
     {
         private static ProgressMonitorService _nuspecMonitor;
         private static ProgressMonitorService _nupackMonitor;
@@ -34,7 +35,7 @@ namespace NuGetPackageMakerAddin
 
         public override void Dispose()
         {
-            if(disposed)return;
+            if (disposed) return;
 
             _monitor.Dispose();
             disposed = true;

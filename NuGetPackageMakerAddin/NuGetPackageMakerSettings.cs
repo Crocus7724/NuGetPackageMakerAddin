@@ -20,7 +20,7 @@ namespace NuGetPackageMakerAddin
             set
             {
                 _usingCustomPath = value;
-               PropertyService.Set(NuGetConst.CheckCustomPathKey,value);
+                PropertyService.Set(NuGetConst.CheckCustomPathKey, value);
             }
         }
 
@@ -30,7 +30,7 @@ namespace NuGetPackageMakerAddin
             set
             {
                 _customPath = value;
-                PropertyService.Set(NuGetConst.OutputPathKey,value);
+                PropertyService.Set(NuGetConst.OutputPathKey, value);
             }
         }
 
@@ -40,7 +40,7 @@ namespace NuGetPackageMakerAddin
             set
             {
                 _beforeBuild = value;
-                PropertyService.Set(NuGetConst.BeforeBuildKey,value);
+                PropertyService.Set(NuGetConst.BeforeBuildKey, value);
             }
         }
 
@@ -50,7 +50,7 @@ namespace NuGetPackageMakerAddin
             set
             {
                 _autoPublish = value;
-                PropertyService.Set(NuGetConst.CheckUseAutoPublishKey,value);
+                PropertyService.Set(NuGetConst.CheckUseAutoPublishKey, value);
             }
         }
 
@@ -60,7 +60,7 @@ namespace NuGetPackageMakerAddin
             set
             {
                 _useReleaseBuild = value;
-                PropertyService.Set(NuGetConst.UseReleaseBuildKey,value);
+                PropertyService.Set(NuGetConst.UseReleaseBuildKey, value);
             }
         }
 
@@ -70,7 +70,7 @@ namespace NuGetPackageMakerAddin
             set
             {
                 _publishUrl = value;
-                PropertyService.Set(NuGetConst.PublishUrlKey,value);
+                PropertyService.Set(NuGetConst.PublishUrlKey, value);
             }
         }
 

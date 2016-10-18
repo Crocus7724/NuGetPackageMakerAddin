@@ -5,6 +5,7 @@ using FileChooserAction = MonoDevelop.Components.FileChooserAction;
 
 namespace NuGetPackageMakerAddin
 {
+    //設定画面の設定
     public class NuGetPackageMakerSettingPanel : OptionsPanel
     {
         private NuGetPackageMakerSettingWidget _widget;

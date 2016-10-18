@@ -20,21 +20,26 @@ namespace NuGetPackageMakerAddin
                     var solution = ProjectService.CurrentSolution;
                     var path = solution.BaseDirectory;
 
+                    //ソリューションの子ディレクトリ全てで.nuspecファイルを取得
                     var nuspecFiles = Directory.EnumerateFiles(path, "*.nuspec", SearchOption.AllDirectories);
                     if (NuGetPackageMakerSettings.Current.BeforeBuild)
                     {
                         using (var buildMonitor = IdeApp.Workbench.ProgressMonitors.GetBuildProgressMonitor())
                         {
+                            //ビルド(Releaseビルドを使う設定だったらReleaseビルドそれ以外なら現在の設定)
                             var reslut = await solution.Build(buildMonitor,
                                 NuGetPackageMakerSettings.Current.UseReleaseBuild
                                     ? solution.Configurations["Release"].Selector
                                     : IdeApp.Workspace.ActiveConfiguration);
 
+                            //結果でエラーが合ったら
                             if (reslut.HasErrors)
                             {
+                                //エラーを出力して終了
                                 monitor.ErrorLog.WriteLine($"\n\n===ビルドに失敗しました。===\n\n");
                                 monitor.ErrorLog.WriteLine("===Error===");
-                                monitor.ErrorLog.WriteLine($"{reslut.Errors.Select(x => x.ErrorText).Aggregate((x,y)=>x+"\n"+y)}");
+                                monitor.ErrorLog.WriteLine(
+                                    $"{reslut.Errors.Select(x => x.ErrorText).Aggregate((x, y) => x + "\n" + y)}");
                                 monitor.ErrorLog.WriteLine("===End Error===");
                                 return;
                             }

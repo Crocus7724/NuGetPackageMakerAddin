@@ -31,12 +31,14 @@ namespace NuGetPackageMakerAddin
                 try
                 {
                     var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
-                    var toolsPath = Path.Combine(solution.BaseDirectory, "tools");
+                    var toolsPath = solution.BaseDirectory.Combine("tools");
 
+                    //toolsフォルダーがなかったら作成
                     await AddToolsFolderIfNotFound(toolsPath, monitor);
 
-                    var nuspecPath = Path.Combine(toolsPath, $"{solution.Name}.nuspec");
+                    var nuspecPath = toolsPath.Combine($"{solution.Name}.nuspec");
 
+                    //.nuspecファイルがなかったら作成
                     await AddNuspecFileIfNotFound(nuspecPath, monitor);
                 }
                 catch (Exception e)
@@ -54,13 +56,17 @@ namespace NuGetPackageMakerAddin
                 monitor.Log.WriteLine($"{path}を作成しました。");
             }
 
+            //ソリューションのフォルダーを探索してtoolsがなかったら
             if (IdeApp.ProjectOperations.CurrentSelectedSolution.RootFolder.Items.All(x => x.Name != "tools"))
             {
+                //ソリューションフォルダーを追加
                 ProjectService.CurrentSolution.RootFolder.AddItem(new SolutionFolder()
                 {
                     BaseDirectory = path,
                     Name = "tools"
                 });
+
+                //Saveしないと反映されない
                 await ProjectService.CurrentSolution.SaveAsync(monitor);
 
                 ProgressMonitorService.GetNuspecMonitor.Log.WriteLine($"{path}をソリューションに追加しました。");
@@ -78,10 +84,14 @@ namespace NuGetPackageMakerAddin
             var solution = ProjectService.CurrentSolution;
             var folder = solution.RootFolder.Items
                 .FirstOrDefault(x => x.Name == "tools") as SolutionFolder;
+
+            //toolsフォルダーに.nuspecがなければ
             if (folder.Files.FirstOrDefault(x => x.FileName == $"{solution.Name}.nuspec") == null)
             {
+                //追加
                 IdeApp.ProjectOperations.AddFilesToSolutionFolder(folder, new[] {path});
 
+                //Saveしないと反映されない
                 await ProjectService.CurrentSolution.SaveAsync(monitor);
 
                 monitor.Log.WriteLine($"{path}をソリューションに追加しました。");
