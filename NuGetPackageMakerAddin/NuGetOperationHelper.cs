@@ -59,22 +59,25 @@ namespace NuGetPackageMakerAddin
                         replace.Attribute("src").Value = Regex.Replace(replace.Attribute("src").Value, "\\.\\./", "");
                     }
 
-                    var nuspecPath = Path.Combine(path.ParentDirectory.ParentDirectory,
-                        $"{path.FileNameWithoutExtension}-backup.nuspec");
-                    nuspec.Save(nuspecPath);
-                    ProcessService.RunNupack(nuspecPath, monitor);
-                    File.Delete(nuspecPath);
-
-                    await PublishIfEnable(nuspecPath);
+                    path = path.ParentDirectory;
                 }
-                else
-                {
-                    var backupPath = Path.Combine(path.ParentDirectory, $"{path.FileNameWithoutExtension}-backup.nuspec");
-                    nuspec.Save(backupPath);
-                    ProcessService.RunNupack(backupPath, monitor);
-                    File.Delete(backupPath);
 
-                    await PublishIfEnable(backupPath);
+                var nuspecPath = path.ParentDirectory.Combine($"backup.nuspec");
+
+                nuspec.Save(nuspecPath);
+                ProcessService.RunNupack(nuspecPath, monitor);
+                File.Delete(nuspecPath);
+
+                string outputPath = NuGetPackageMakerSettings.Current.UsingCustomPath
+                    ? NuGetPackageMakerSettings.Current.CustomPath
+                    : path.ToString();
+
+                var nupkg = string.Join(".", nuspec.XPathSelectElement("metadata/id").Value,
+                    nuspec.XPathSelectElement("metadata/version").Value, "nupkg");
+
+                if (NuGetPackageMakerSettings.Current.AutoPublish)
+                {
+                    await ProcessService.RunPush(Path.Combine(outputPath, nupkg));
                 }
             });
 
@@ -97,9 +100,11 @@ namespace NuGetPackageMakerAddin
                             IdeApp.Workspace.ActiveConfigurationId, "$Configuration$")),
                     new XAttribute("target", "lib/")));
 
+
         private static void ReplaceMacro(XElement input) => input.Value = ConvertMacro(input.Value);
 
         private static void ReplaceMacro(XAttribute input) => input.Value = ConvertMacro(input.Value);
+
 
         private static string ConvertMacro(string input)
         {
@@ -148,16 +153,6 @@ namespace NuGetPackageMakerAddin
             }
 
             return input;
-        }
-
-        private static async Task PublishIfEnable(FilePath nuspecPath)
-        {
-            var settings = NuGetPackageMakerSettings.Current;
-            if (!settings.AutoPublish) return;
-
-            string nupkgPath = settings.UsingCustomPath ? settings.CustomPath : nuspecPath.ParentDirectory.ToString();
-
-            await ProcessService.RunPush(nupkgPath);
         }
     }
 }
