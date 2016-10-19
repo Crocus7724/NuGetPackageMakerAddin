@@ -46,6 +46,7 @@ namespace NuGetPackageMakerAddin
 
                 foreach (var replace in nuspec.XPathSelectElements("metadata").Elements())
                 {
+                    if (replace.HasElements) break;
                     ReplaceMacro(replace);
                 }
 
