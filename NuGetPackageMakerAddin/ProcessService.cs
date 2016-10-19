@@ -6,7 +6,7 @@ namespace NuGetPackageMakerAddin
 {
     internal class ProcessService
     {
-        public static void RunNupack(FilePath path, ProgressMonitor monitor)
+        public static bool RunNupack(FilePath path, ProgressMonitor monitor)
         {
             using (var process = new Process())
             {
@@ -28,10 +28,13 @@ namespace NuGetPackageMakerAddin
                 process.Start();
 
 
+
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
                 process.WaitForExit();
+
+                return process.ExitCode==0;
             }
         }
 

@@ -81,6 +81,7 @@ namespace NuGetPackageMakerAddin
             _beforeBuild = PropertyService.Get<bool>(NuGetConst.BeforeBuildKey);
             _useReleaseBuild = PropertyService.Get<bool>(NuGetConst.UseReleaseBuildKey);
             _autoPublish = PropertyService.Get<bool>(NuGetConst.CheckUseAutoPublishKey);
+            _publishUrl = PropertyService.Get<string>(NuGetConst.PublishUrlKey);
         }
     }
 }

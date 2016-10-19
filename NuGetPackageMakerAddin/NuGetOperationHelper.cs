@@ -70,12 +70,17 @@ namespace NuGetPackageMakerAddin
 
                 //実行用のダミーnuspec作成
                 var nuspecPath = path.ParentDirectory.Combine($"backup.nuspec");
-
-                nuspec.Save(nuspecPath);
-                ProcessService.RunNupack(nuspecPath, monitor);
-                File.Delete(nuspecPath);
-
-                if (NuGetPackageMakerSettings.Current.AutoPublish)
+                bool success = false;
+                try
+                {
+                    nuspec.Save(nuspecPath);
+                    success = ProcessService.RunNupack(nuspecPath, monitor);
+                }
+                finally
+                {
+                    if(File.Exists(nuspecPath))File.Delete(nuspecPath);
+                }
+                if (success&&NuGetPackageMakerSettings.Current.AutoPublish)
                 {
                     string outputPath = NuGetPackageMakerSettings.Current.UsingCustomPath
                         ? NuGetPackageMakerSettings.Current.CustomPath
@@ -83,7 +88,6 @@ namespace NuGetPackageMakerAddin
 
                     var nupkg = string.Join(".", nuspec.XPathSelectElement("metadata/id").Value,
                         nuspec.XPathSelectElement("metadata/version").Value, "nupkg");
-
 
                     await ProcessService.RunPush(Path.Combine(outputPath, nupkg));
                 }
